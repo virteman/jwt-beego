@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
+	"sync"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -19,7 +20,7 @@ type EasyToken struct {
 
 // https://gist.github.com/cryptix/45c33ecf0ae54828e63b
 // location of the files used for signing and verification
-const (
+var (
 	privKeyPath = "keys/rsakey.pem"     // openssl genrsa -out app.rsa keysize
 	pubKeyPath  = "keys/rsakey.pem.pub" // openssl rsa -in app.rsa -pubout > app.rsa.pub
 )
@@ -29,7 +30,7 @@ var (
 	mySigningKey *rsa.PrivateKey
 )
 
-func init() {
+func initOnce() {
 	verifyBytes, err := ioutil.ReadFile(pubKeyPath)
 	if err != nil {
 		log.Fatal(err)
@@ -49,6 +50,21 @@ func init() {
 	mySigningKey, err = jwt.ParseRSAPrivateKeyFromPEM(signBytes)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+var once sync.Once
+
+func NewEasyToken(uname string, expires int64, keysDir string) {
+	//init once
+	once.Do(func() {
+		privKeyPath = keysDir + privKeyPath
+		pubKeyPath = keysDir + pubKeyPath
+		initOnce()
+	})
+	return EasyToken{
+		Username: uname,
+		Expires:  expires,
 	}
 }
 
