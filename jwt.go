@@ -55,7 +55,7 @@ func initOnce() {
 
 var once sync.Once
 
-func NewEasyToken(uname string, expires int64, keysDir string) {
+func NewEasyToken(uname string, expires int64, keysDir string) EasyToken {
 	//init once
 	once.Do(func() {
 		privKeyPath = keysDir + privKeyPath
